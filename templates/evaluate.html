@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>{{ skill.skill }} - {{ division }} {{ sport }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>{{ skill.skill }}</h1>
+        <p>{{ division }} &middot; {{ sport }} &middot; scored {{ skill.min_score }}-{{ skill.max_score }}</p>
+    </header>
+    <main>
+        <a class="card-link" style="text-align:center; font-weight:600;" href="/evaluate/{{ division }}/{{ sport }}">&larr; Back to skills</a>
+
+        <button class="add-player-btn" onclick="openManualForm()">+ Add a player not on the list</button>
+
+        <div class="section-title">Players to evaluate</div>
+        <div id="player-list">
+            {% for p in players %}
+            <button class="list-btn" data-id="{{ p.id_reg }}"
+                    data-name="{{ p.first_name }} {{ p.last_name }}"
+                    onclick="openRatingPanel(this)">
+                {{ p.first_name }} {{ p.last_name }}
+            </button>
+            {% else %}
+            <p class="empty-state" id="empty-msg">Everyone in this list has been evaluated for this skill.</p>
+            {% endfor %}
+        </div>
+    </main>
+
+    <!-- Rating overlay for an existing (registered) player -->
+    <div class="overlay" id="rating-overlay">
+        <div class="panel">
+            <h2 id="rating-player-name"></h2>
+            <div class="score-grid" id="score-grid"></div>
+            <button class="cancel-btn" onclick="closeOverlay('rating-overlay')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Manual add-player overlay -->
+    <div class="overlay" id="manual-overlay">
+        <div class="panel">
+            <h2>Add a player</h2>
+            <input type="text" id="manual-first" placeholder="First name" autocomplete="off">
+            <input type="text" id="manual-last" placeholder="Last name" autocomplete="off">
+            <div class="score-grid" id="manual-score-grid"></div>
+            <button class="cancel-btn" onclick="closeOverlay('manual-overlay')">Cancel</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const DIVISION = {{ division|tojson }};
+        const SPORT = {{ sport|tojson }};
+        const SKILL_ID = {{ skill.id_eval_skill }};
+        const MIN_SCORE = {{ skill.min_score }};
+        const MAX_SCORE = {{ skill.max_score }};
+
+        let currentPlayerBtn = null;
+
+        function buildScoreButtons(container, onPick) {
+            container.innerHTML = "";
+            for (let s = MIN_SCORE; s <= MAX_SCORE; s++) {
+                const btn = document.createElement("button");
+                btn.className = "score-btn";
+                btn.textContent = s;
+                btn.onclick = () => onPick(s);
+                container.appendChild(btn);
+            }
+        }
+
+        function openRatingPanel(btn) {
+            currentPlayerBtn = btn;
+            document.getElementById("rating-player-name").textContent = btn.dataset.name;
+            buildScoreButtons(document.getElementById("score-grid"), submitRating);
+            document.getElementById("rating-overlay").classList.add("active");
+        }
+
+        function openManualForm() {
+            document.getElementById("manual-first").value = "";
+            document.getElementById("manual-last").value = "";
+            buildScoreButtons(document.getElementById("manual-score-grid"), submitManualRating);
+            document.getElementById("manual-overlay").classList.add("active");
+        }
+
+        function closeOverlay(id) {
+            document.getElementById(id).classList.remove("active");
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.textContent = msg;
+            t.classList.add("show");
+            setTimeout(() => t.classList.remove("show"), 1600);
+        }
+
+        async function submitRating(score) {
+            const idReg = currentPlayerBtn.dataset.id;
+            try {
+                const res = await fetch(`/api/evaluate/${encodeURIComponent(DIVISION)}/${encodeURIComponent(SPORT)}/${SKILL_ID}/player/${idReg}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ score })
+                });
+                if (!res.ok) throw new Error(await res.text());
+                currentPlayerBtn.remove();
+                closeOverlay("rating-overlay");
+                showToast("Saved");
+                maybeShowEmptyState();
+            } catch (e) {
+                showToast("Error saving - try again");
+            }
+        }
+
+        async function submitManualRating(score) {
+            const first = document.getElementById("manual-first").value.trim();
+            const last = document.getElementById("manual-last").value.trim();
+            if (!first || !last) {
+                showToast("Enter first and last name");
+                return;
+            }
+            try {
+                const res = await fetch(`/api/evaluate/${encodeURIComponent(DIVISION)}/${encodeURIComponent(SPORT)}/${SKILL_ID}/manual`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ first_name: first, last_name: last, score })
+                });
+                if (!res.ok) throw new Error(await res.text());
+                closeOverlay("manual-overlay");
+                showToast("Saved");
+            } catch (e) {
+                showToast("Error saving - try again");
+            }
+        }
+
+        function maybeShowEmptyState() {
+            const list = document.getElementById("player-list");
+            if (!list.querySelector(".list-btn")) {
+                const p = document.createElement("p");
+                p.className = "empty-state";
+                p.textContent = "Everyone in this list has been evaluated for this skill.";
+                list.appendChild(p);
+            }
+        }
+    </script>
+</body>
+</html>
