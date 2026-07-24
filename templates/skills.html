@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Select Skill - {{ division }} {{ sport }}</title>
+    <title>Select Skill - {{ sport }} {{ division }}</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <header>
         <h1>{{ division }} &middot; {{ sport }}</h1>
-        <p>Choose the skill you're evaluating</p>
+        <p>{{ season }} {{ year }} &middot; Choose the skill you're evaluating</p>
     </header>
     <main>
         {% if skills %}
             {% for s in skills %}
-            <a class="card-link" href="/evaluate/{{ division }}/{{ sport }}/{{ s.id_eval_skill }}">
+            <a class="card-link" href="/evaluate/{{ sport }}/{{ year }}/{{ season }}/{{ division }}/{{ s.id_eval_skill }}">
                 {{ s.skill }}
             </a>
             {% endfor %}

@@ -19,34 +19,43 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def require_valid_division_sport(division: str, sport: str):
+def require_valid_combo(sport: str, division: str):
     if not db.division_sport_valid(division, sport):
-        raise HTTPException(status_code=404, detail="Unknown division/sport combination")
+        raise HTTPException(status_code=404, detail="Unknown sport/division combination")
 
 
-@app.get("/evaluate/{division}/{sport}", response_class=HTMLResponse)
-def list_skills(request: Request, division: str, sport: str):
-    require_valid_division_sport(division, sport)
+@app.get("/evaluate/{sport}/{year}/{season}/{division}", response_class=HTMLResponse)
+def list_skills(request: Request, sport: str, year: int, season: str, division: str):
+    require_valid_combo(sport, division)
     skills = db.get_skills()
     return templates.TemplateResponse(
         "skills.html",
-        {"request": request, "division": division, "sport": sport, "skills": skills},
+        {
+            "request": request,
+            "sport": sport,
+            "year": year,
+            "season": season,
+            "division": division,
+            "skills": skills,
+        },
     )
 
 
-@app.get("/evaluate/{division}/{sport}/{skill_id}", response_class=HTMLResponse)
-def evaluate_skill(request: Request, division: str, sport: str, skill_id: int):
-    require_valid_division_sport(division, sport)
+@app.get("/evaluate/{sport}/{year}/{season}/{division}/{skill_id}", response_class=HTMLResponse)
+def evaluate_skill(request: Request, sport: str, year: int, season: str, division: str, skill_id: int):
+    require_valid_combo(sport, division)
     skill = db.get_skill(skill_id)
     if not skill:
         raise HTTPException(status_code=404, detail="Unknown skill")
-    players = db.get_unevaluated_players(division, sport, skill_id)
+    players = db.get_unevaluated_players(division, sport, year, season, skill_id)
     return templates.TemplateResponse(
         "evaluate.html",
         {
             "request": request,
-            "division": division,
             "sport": sport,
+            "year": year,
+            "season": season,
+            "division": division,
             "skill": skill,
             "players": players,
         },
@@ -63,9 +72,12 @@ class ManualSubmission(BaseModel):
     score: int
 
 
-@app.post("/api/evaluate/{division}/{sport}/{skill_id}/player/{id_reg}")
-def submit_rating(request: Request, division: str, sport: str, skill_id: int, id_reg: int, body: RatingSubmission):
-    require_valid_division_sport(division, sport)
+@app.post("/api/evaluate/{sport}/{year}/{season}/{division}/{skill_id}/player/{id_reg}")
+def submit_rating(
+    request: Request, sport: str, year: int, season: str, division: str, skill_id: int, id_reg: int,
+    body: RatingSubmission,
+):
+    require_valid_combo(sport, division)
     skill = db.get_skill(skill_id)
     if not skill:
         raise HTTPException(status_code=404, detail="Unknown skill")
@@ -76,9 +88,12 @@ def submit_rating(request: Request, division: str, sport: str, skill_id: int, id
     return JSONResponse({"status": "ok"})
 
 
-@app.post("/api/evaluate/{division}/{sport}/{skill_id}/manual")
-def submit_manual_rating(request: Request, division: str, sport: str, skill_id: int, body: ManualSubmission):
-    require_valid_division_sport(division, sport)
+@app.post("/api/evaluate/{sport}/{year}/{season}/{division}/{skill_id}/manual")
+def submit_manual_rating(
+    request: Request, sport: str, year: int, season: str, division: str, skill_id: int,
+    body: ManualSubmission,
+):
+    require_valid_combo(sport, division)
     skill = db.get_skill(skill_id)
     if not skill:
         raise HTTPException(status_code=404, detail="Unknown skill")

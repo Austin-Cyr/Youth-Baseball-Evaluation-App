@@ -61,8 +61,8 @@ def get_skill(skill_id: int):
             return cur.fetchone()
 
 
-def get_unevaluated_players(division: str, sport: str, skill_id: int):
-    """Registered players in this division/sport who have no eval_results row for this skill."""
+def get_unevaluated_players(division: str, sport: str, year: int, season: str, skill_id: int):
+    """Registered players in this division/sport/year/season who have no eval_results row for this skill."""
     with get_conn() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(
@@ -72,6 +72,8 @@ def get_unevaluated_players(division: str, sport: str, skill_id: int):
                 FROM public.registrations
                 WHERE division = %s
                   AND sport = %s
+                  AND year = %s
+                  AND season = %s
                   AND id_reg NOT IN (
                         SELECT id_player_reg
                         FROM public.eval_results
@@ -80,7 +82,7 @@ def get_unevaluated_players(division: str, sport: str, skill_id: int):
                   )
                 ORDER BY player_first_name, player_last_name
                 """,
-                (division, sport, skill_id),
+                (division, sport, year, season, skill_id),
             )
             return cur.fetchall()
 

@@ -9,10 +9,10 @@
 <body>
     <header>
         <h1>{{ skill.skill }}</h1>
-        <p>{{ division }} &middot; {{ sport }} &middot; scored {{ skill.min_score }}-{{ skill.max_score }}</p>
+        <p>{{ division }} &middot; {{ sport }} &middot; {{ season }} {{ year }} &middot; scored {{ skill.min_score }}-{{ skill.max_score }}</p>
     </header>
     <main>
-        <a class="card-link" style="text-align:center; font-weight:600;" href="/evaluate/{{ division }}/{{ sport }}">&larr; Back to skills</a>
+        <a class="card-link" style="text-align:center; font-weight:600;" href="/evaluate/{{ sport }}/{{ year }}/{{ season }}/{{ division }}">&larr; Back to skills</a>
 
         <button class="add-player-btn" onclick="openManualForm()">+ Add a player not on the list</button>
 
@@ -53,8 +53,10 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        const DIVISION = {{ division|tojson }};
         const SPORT = {{ sport|tojson }};
+        const YEAR = {{ year|tojson }};
+        const SEASON = {{ season|tojson }};
+        const DIVISION = {{ division|tojson }};
         const SKILL_ID = {{ skill.id_eval_skill }};
         const MIN_SCORE = {{ skill.min_score }};
         const MAX_SCORE = {{ skill.max_score }};
@@ -100,7 +102,7 @@
         async function submitRating(score) {
             const idReg = currentPlayerBtn.dataset.id;
             try {
-                const res = await fetch(`/api/evaluate/${encodeURIComponent(DIVISION)}/${encodeURIComponent(SPORT)}/${SKILL_ID}/player/${idReg}`, {
+                const res = await fetch(`/api/evaluate/${encodeURIComponent(SPORT)}/${YEAR}/${encodeURIComponent(SEASON)}/${encodeURIComponent(DIVISION)}/${SKILL_ID}/player/${idReg}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ score })
@@ -123,7 +125,7 @@
                 return;
             }
             try {
-                const res = await fetch(`/api/evaluate/${encodeURIComponent(DIVISION)}/${encodeURIComponent(SPORT)}/${SKILL_ID}/manual`, {
+                const res = await fetch(`/api/evaluate/${encodeURIComponent(SPORT)}/${YEAR}/${encodeURIComponent(SEASON)}/${encodeURIComponent(DIVISION)}/${SKILL_ID}/manual`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ first_name: first, last_name: last, score })
