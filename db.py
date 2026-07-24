@@ -78,7 +78,7 @@ def get_unevaluated_players(division: str, sport: str, skill_id: int):
                         WHERE id_eval_skill = %s
                           AND id_player_reg IS NOT NULL
                   )
-                ORDER BY player_last_name, player_first_name
+                ORDER BY player_first_name, player_last_name
                 """,
                 (division, sport, skill_id),
             )
