@@ -42,16 +42,24 @@ def get_division_id(division: str) -> int:
             return result[0] if result else None
 
 
-def get_skills():
-    """Return all skills being evaluated, with their score range."""
+def get_skills(division_id: int):
+    """Return only skills that have at least one active criterion for this division."""
     with get_conn() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(
                 """
                 SELECT id_eval_skill, skill, min_score, max_score
                 FROM public.eval_skill
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM public.eval_skill_criteria
+                    WHERE eval_skill_criteria.id_eval_skill = eval_skill.id_eval_skill
+                    AND id_div = %s
+                    AND active = 'y'
+                )
                 ORDER BY skill
-                """
+                """,
+                (division_id,),
             )
             return cur.fetchall()
 
@@ -81,7 +89,7 @@ def get_skill_criteria(skill_id: int, division_id: int):
                 WHERE id_eval_skill = %s
                   AND id_div = %s
                   AND active = 'y'
-                ORDER BY score_level desc
+                ORDER BY score_level DESC
                 """,
                 (skill_id, division_id),
             )

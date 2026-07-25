@@ -27,7 +27,10 @@ def require_valid_combo(sport: str, division: str):
 @app.get("/evaluate/{sport}/{year}/{season}/{division}", response_class=HTMLResponse)
 def list_skills(request: Request, sport: str, year: int, season: str, division: str):
     require_valid_combo(sport, division)
-    skills = db.get_skills()
+    division_id = db.get_division_id(division)
+    if not division_id:
+        raise HTTPException(status_code=404, detail="Unknown division")
+    skills = db.get_skills(division_id)
     return templates.TemplateResponse(
         "skills.html",
         {
