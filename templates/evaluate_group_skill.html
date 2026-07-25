@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>{{ skill.skill }} - {{ player.first_name }} {{ player.last_name }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>{{ skill.skill }}</h1>
+        <p>{{ player.first_name }} {{ player.last_name }} · Skill {{ position }}/{{ total_skills }}</p>
+    </header>
+    <main>
+        <a class="card-link" style="text-align:center; font-weight:600;" href="/evaluate/{{ sport }}/{{ year }}/{{ season }}/{{ division }}/{{ skill_group_id }}">&larr; Back to players</a>
+
+        <div class="section-title">Scoring Criteria</div>
+        <div class="criteria-box">
+            {% for c in criteria %}
+            <div class="criteria-level">
+                <strong>{{ c.score_level }}</strong>
+                {% if c.criteria %}
+                    <span>{{ c.criteria }}</span>
+                {% else %}
+                    <span style="color:#999; font-style:italic;">No description provided</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="section-title">Rate this skill</div>
+        <div class="score-grid" id="score-grid"></div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const SPORT = {{ sport|tojson }};
+        const YEAR = {{ year }};
+        const SEASON = {{ season|tojson }};
+        const DIVISION = {{ division|tojson }};
+        const SKILL_GROUP_ID = {{ skill_group_id }};
+        const PLAYER_ID = {{ player_id }};
+        const SKILL_ID = {{ skill.id_eval_skill }};
+        const MIN_SCORE = {{ skill.min_score }};
+        const MAX_SCORE = {{ skill.max_score }};
+        const POSITION = {{ position }};
+        const TOTAL_SKILLS = {{ total_skills }};
+
+        function buildScoreButtons(container) {
+            container.innerHTML = "";
+            for (let s = MIN_SCORE; s <= MAX_SCORE; s++) {
+                const btn = document.createElement("button");
+                btn.className = "score-btn";
+                
+                // For yes/no skills (0-1 range), show No/Yes labels
+                if (MIN_SCORE === 0 && MAX_SCORE === 1) {
+                    btn.textContent = s === 0 ? "No" : "Yes";
+                } else {
+                    btn.textContent = s;
+                }
+                
+                btn.onclick = () => submitRating(s);
+                container.appendChild(btn);
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.textContent = msg;
+            t.classList.add("show");
+            setTimeout(() => t.classList.remove("show"), 1600);
+        }
+
+        async function submitRating(score) {
+            try {
+                const res = await fetch(
+                    `/api/evaluate/${encodeURIComponent(SPORT)}/${YEAR}/${encodeURIComponent(SEASON)}/${encodeURIComponent(DIVISION)}/${SKILL_GROUP_ID}/${PLAYER_ID}/${SKILL_ID}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ score })
+                    }
+                );
+                if (!res.ok) throw new Error(await res.text());
+                
+                const data = await res.json();
+                showToast("Saved");
+                
+                // If there's a next skill, go to it
+                if (data.next_position) {
+                    setTimeout(() => {
+                        window.location.href = `/evaluate/${encodeURIComponent(SPORT)}/${YEAR}/${encodeURIComponent(SEASON)}/${encodeURIComponent(DIVISION)}/${SKILL_GROUP_ID}/${PLAYER_ID}/${data.next_position}`;
+                    }, 500);
+                } else {
+                    // Group complete, go back to player list
+                    setTimeout(() => {
+                        window.location.href = `/evaluate/${encodeURIComponent(SPORT)}/${YEAR}/${encodeURIComponent(SEASON)}/${encodeURIComponent(DIVISION)}/${SKILL_GROUP_ID}`;
+                    }, 500);
+                }
+            } catch (e) {
+                showToast("Error saving - try again");
+            }
+        }
+
+        // Build buttons on load
+        buildScoreButtons(document.getElementById("score-grid"));
+    </script>
+</body>
+</html>
