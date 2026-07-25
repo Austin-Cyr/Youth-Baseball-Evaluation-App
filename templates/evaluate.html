@@ -82,7 +82,14 @@
             for (let s = MIN_SCORE; s <= MAX_SCORE; s++) {
                 const btn = document.createElement("button");
                 btn.className = "score-btn";
-                btn.textContent = s;
+                
+                // For yes/no skills (0-1 range), show No/Yes labels instead of numbers
+                if (MIN_SCORE === 0 && MAX_SCORE === 1) {
+                    btn.textContent = s === 0 ? "No" : "Yes";
+                } else {
+                    btn.textContent = s;
+                }
+                
                 btn.onclick = () => onPick(s);
                 container.appendChild(btn);
             }
