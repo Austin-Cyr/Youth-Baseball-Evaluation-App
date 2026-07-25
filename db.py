@@ -33,6 +33,15 @@ def division_sport_valid(division: str, sport: str) -> bool:
     return div_ok and sport_ok
 
 
+def get_division_id(division: str) -> int:
+    """Get the id_div for a division name."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute('SELECT id_div FROM public.divisions WHERE division = %s', (division,))
+            result = cur.fetchone()
+            return result[0] if result else None
+
+
 def get_skill_groups(division_id: int):
     """Get all active skill groups for a division."""
     with get_conn() as conn:
