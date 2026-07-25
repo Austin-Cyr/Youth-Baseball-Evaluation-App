@@ -81,7 +81,7 @@ def get_skill_criteria(skill_id: int, division_id: int):
                 WHERE id_eval_skill = %s
                   AND id_div = %s
                   AND active = 'y'
-                ORDER BY score_level
+                ORDER BY score_level desc
                 """,
                 (skill_id, division_id),
             )
