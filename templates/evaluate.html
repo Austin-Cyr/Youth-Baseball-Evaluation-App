@@ -16,6 +16,20 @@
 
         <button class="add-player-btn" onclick="openManualForm()">+ Add a player not on the list</button>
 
+        <div class="section-title">Scoring Criteria</div>
+        <div class="criteria-box">
+            {% for c in criteria %}
+            <div class="criteria-level">
+                <strong>{{ c.score_level }}</strong>
+                {% if c.criteria %}
+                    <span>{{ c.criteria }}</span>
+                {% else %}
+                    <span style="color:#999; font-style:italic;">No description provided</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
         <div class="section-title">Players to evaluate</div>
         <div id="player-list">
             {% for p in players %}

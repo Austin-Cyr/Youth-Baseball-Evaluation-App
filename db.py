@@ -33,6 +33,15 @@ def division_sport_valid(division: str, sport: str) -> bool:
     return div_ok and sport_ok
 
 
+def get_division_id(division: str) -> int:
+    """Get the id_div for a division name."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute('SELECT id_div FROM public.divisions WHERE division = %s', (division,))
+            result = cur.fetchone()
+            return result[0] if result else None
+
+
 def get_skills():
     """Return all skills being evaluated, with their score range."""
     with get_conn() as conn:
@@ -59,6 +68,24 @@ def get_skill(skill_id: int):
                 (skill_id,),
             )
             return cur.fetchone()
+
+
+def get_skill_criteria(skill_id: int, division_id: int):
+    """Get all criteria for a skill/division combo, ordered by score level."""
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT score_level, criteria
+                FROM public.eval_skill_criteria
+                WHERE id_eval_skill = %s
+                  AND id_div = %s
+                  AND active = 'y'
+                ORDER BY score_level
+                """,
+                (skill_id, division_id),
+            )
+            return cur.fetchall()
 
 
 def get_unevaluated_players(division: str, sport: str, year: int, season: str, skill_id: int):

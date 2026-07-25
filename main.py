@@ -47,6 +47,10 @@ def evaluate_skill(request: Request, sport: str, year: int, season: str, divisio
     skill = db.get_skill(skill_id)
     if not skill:
         raise HTTPException(status_code=404, detail="Unknown skill")
+    division_id = db.get_division_id(division)
+    if not division_id:
+        raise HTTPException(status_code=404, detail="Unknown division")
+    criteria = db.get_skill_criteria(skill_id, division_id)
     players = db.get_unevaluated_players(division, sport, year, season, skill_id)
     return templates.TemplateResponse(
         "evaluate.html",
@@ -57,6 +61,7 @@ def evaluate_skill(request: Request, sport: str, year: int, season: str, divisio
             "season": season,
             "division": division,
             "skill": skill,
+            "criteria": criteria,
             "players": players,
         },
     )
