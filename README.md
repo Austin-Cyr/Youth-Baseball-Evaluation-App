@@ -1,40 +1,22 @@
-# Player Evaluation App
+# Youth Baseball Player Evaluation App
 
-A mobile-friendly web app for evaluating players. Each division/sport combination
-gets its own link (e.g. `/evaluate/12U/Baseball`). No login required.
+A mobile-friendly web app for evaluating youth baseball players' skills for use in the season wide draft.
 
-## 1. Run the database migration
+## 1. Why this exists?
 
-Before starting the app, run `migration.sql` once against your existing Postgres
-database. It:
-- Makes `id_player_reg` nullable on `eval_results` and adds an `evaluator_ip` column
-- Turns `id_eval` into an auto-incrementing identity column (safe only because
-  `eval_results` is currently empty)
-- Creates a new `eval_results_manual_players` table for players an evaluator
-  types in manually (not on the roster)
+Before the start of the season, players are rated on a scale between 1-5 in a number of baseball skill areas. Previously, the league rated the players on paper
+and the scores were later transcribed to an excel file to be used in the draft. This method required a person to transcribe the ratings, leading to data input
+errors, delays in when the draft could occur and lack of history for the players. The paper method also required additional supplies, including paper, pencils
+and clipboards. By transferring the data collection from a paper method, removed the need for supplies, allowed users to use their own mobile phones and doesn't
+require supplies to be returned to the league, minimizing the risk of data loss. 
 
-```bash
-psql "$DATABASE_URL" -f migration.sql
-```
+## 2. What it does?
 
-## 2. Configure the database connection
+Provides an enhanced skill rating intake method that is durable, flexible and enjoyable to the users. 
 
-```bash
-cp .env.example .env
-# then edit .env and set DATABASE_URL to your real Postgres connection string
-```
+## 3. Architecture
 
-## 3. Install dependencies and run
 
-```bash
-pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-For production use, run behind a real ASGI server setup (e.g. uvicorn workers
-behind Nginx, or deploy to a host like Render/Railway/Fly.io/an internal server).
-If you deploy behind a reverse proxy or load balancer, the app already reads the
-`X-Forwarded-For` header to capture the evaluator's real IP address.
 
 ## 4. Share links with evaluators
 
