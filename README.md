@@ -15,7 +15,8 @@ require supplies to be returned to the league, minimizing the risk of data loss.
 Provides an enhanced skill rating intake method that is durable, flexible and enjoyable to the users. 
 
 ## 3. Architecture
-
+- Database - Postgres via NEON
+- Front End - 
 
 
 ## 4. Share links with evaluators
